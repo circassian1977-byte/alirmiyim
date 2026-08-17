@@ -2930,14 +2930,6 @@ function hn2({ report: e3, onBack: t2 }) {
   let km = e3 && e3.km ? e3.km : null;
   let issues = e3 && e3.band && e3.band.chronic ? e3.band.chronic : [];
   let adviceColor = advice === "ALINABİLİR" ? "text-ok" : advice === "UZAK DURULMALI" ? "text-bad" : "text-warn";
-  let ekspertizList = [
-    { item: "Tramer + ekspertiz boya ölçümü", why: "Hasar ve değişen, fiyatın yarısını belirler" },
-    { item: "Motor soğuk çalıştırma", why: "Zincir, hidrolik itici, turbo yağ kaçak sesi" },
-    { item: "Şanzıman: dur-kalk + yokuş + geri", why: "DCT/CVT sorunları düşük hızda çıkar" },
-    { item: "Alt takım lift", why: "Salıncak, rot, şaft, yağ kaçakları" },
-    { item: "OBD tarama", why: "Gizli arıza, DPF, AdBlue, mekatronik kodları" },
-    { item: "Bakım / yağ / triger kaydı", why: "Periyot atlanmışsa risk katlanır" }
-  ];
 
   function buildShareText() {
     let lines = [];
@@ -2958,74 +2950,48 @@ function hn2({ report: e3, onBack: t2 }) {
     }
     lines.push("");
     lines.push("⚠️ Bu ön bilgidir. Mutlaka bağımsız ekspertiz yaptırın.");
-    lines.push("");
     lines.push("https://alirmiyim.com");
-    return lines.join("\\n");
+    return lines.join("\n");
   }
 
   function shareWhatsApp() {
     let text = buildShareText();
-    let url = "https://wa.me/?text=" + encodeURIComponent(text);
-    window.open(url, "_blank");
+    window.open("https://wa.me/?text=" + encodeURIComponent(text), "_blank");
   }
 
   function downloadPdf() {
     window.print();
   }
 
-  return (0, y3.jsxs)("div", { className: "mx-auto max-w-xl space-y-4 px-4 py-6 pb-20 print:max-w-none print:px-0 print:py-0", children: [
+  return (0, y3.jsxs)("div", { className: "mx-auto max-w-xl space-y-4 px-4 py-6 pb-20", children: [
     (0, y3.jsx)("button", { type: "button", onClick: t2, className: "text-sm text-muted hover:text-fg print:hidden", children: "\u2190 Geri" }),
     title ? (0, y3.jsxs)("div", { children: [
       (0, y3.jsx)("h2", { className: "text-xl font-medium tracking-tight", children: title }),
       km ? (0, y3.jsxs)("p", { className: "mt-1 text-sm text-muted", children: [Number(km).toLocaleString("tr-TR"), " km"] }) : null
     ] }) : null,
-    advice ? (0, y3.jsxs)("div", { className: "rounded-xl border border-border bg-surface p-5 print:border print:shadow-none", children: [
+    advice ? (0, y3.jsxs)("div", { className: "rounded-xl border border-border bg-surface p-5", children: [
       (0, y3.jsx)("p", { className: "text-xs text-subtle uppercase tracking-wide", children: "\xD6n tavsiye" }),
       (0, y3.jsx)("p", { className: "mt-2 text-lg font-medium " + adviceColor, children: advice }),
       risk != null ? (0, y3.jsxs)("p", { className: "mt-2 text-sm text-muted", children: ["Risk skoru: ", String(risk), "/100"] }) : null
     ] }) : null,
-    issues && issues.length ? (0, y3.jsxs)("div", { className: "rounded-xl border border-border bg-surface overflow-hidden print:border", children: [
-      (0, y3.jsx)("p", { className: "text-xs text-subtle uppercase tracking-wide px-5 pt-4 pb-2", children: "Dikkat noktalar\u0131" }),
-      (0, y3.jsx)("div", { className: "divide-y divide-border", children: issues.slice(0, 8).map(function(iss, i) {
+    issues && issues.length ? (0, y3.jsxs)("div", { className: "rounded-xl border border-border bg-surface p-5", children: [
+      (0, y3.jsx)("p", { className: "text-xs text-subtle uppercase tracking-wide mb-3", children: "Dikkat noktalar\u0131" }),
+      (0, y3.jsx)("ul", { className: "space-y-2", children: issues.slice(0, 8).map(function(iss, i) {
         let label = typeof iss === "string" ? iss : (iss.title || iss.name || iss.code || "Madde");
-        let desc = typeof iss === "object" ? (iss.desc || iss.text || iss.symptoms || null) : null;
-        return (0, y3.jsxs)("details", { key: String(i), className: "group print:open", open: true, children: [
-          (0, y3.jsxs)("summary", { className: "cursor-pointer list-none px-5 py-3 text-sm font-medium flex items-center justify-between gap-3 hover:bg-black/5 print:cursor-default", children: [
-            (0, y3.jsx)("span", { children: label }),
-            (0, y3.jsx)("span", { className: "text-muted text-xs shrink-0 transition group-open:rotate-180 print:hidden", children: "\u25BE" })
-          ] }),
-          desc ? (0, y3.jsx)("div", { className: "px-5 pb-3 text-sm text-muted leading-relaxed", children: desc }) : (0, y3.jsx)("div", { className: "px-5 pb-3 text-sm text-muted", children: "Detayl\u0131 bilgi i\u00E7in ekspertiz \u015Fart." })
-        ] });
+        return (0, y3.jsx)("li", { key: String(i), className: "text-sm font-medium", children: label });
       }) })
     ] }) : null,
-    (0, y3.jsxs)("details", { className: "rounded-xl border border-border bg-surface overflow-hidden group print:open", open: true, children: [
-      (0, y3.jsxs)("summary", { className: "cursor-pointer list-none px-5 py-4 text-sm font-medium flex items-center justify-between gap-3 print:cursor-default", children: [
-        (0, y3.jsx)("span", { children: "Ekspertiz kontrol listesi" }),
-        (0, y3.jsx)("span", { className: "text-muted text-xs shrink-0 transition group-open:rotate-180 print:hidden", children: "\u25BE" })
-      ] }),
-      (0, y3.jsx)("div", { className: "px-5 pb-4 space-y-3 border-t border-border pt-3", children: ekspertizList.map(function(ex, i) {
-        return (0, y3.jsxs)("div", { key: String(i), children: [
-          (0, y3.jsx)("p", { className: "text-sm font-medium", children: ex.item }),
-          (0, y3.jsx)("p", { className: "mt-0.5 text-sm text-muted leading-relaxed", children: ex.why })
-        ] });
-      }) })
+    (0, y3.jsxs)("div", { className: "rounded-xl border border-border bg-surface p-5 text-sm leading-relaxed text-muted space-y-2", children: [
+      (0, y3.jsx)("p", { className: "text-xs text-subtle uppercase tracking-wide", children: "Mutlaka yap" }),
+      (0, y3.jsx)("p", { children: "\u2022 Ba\u011F\u0131ms\u0131z ekspertize g\xF6t\xFCr (boya \xF6l\xE7er, \u015Fasi, OBD, lift)." }),
+      (0, y3.jsx)("p", { children: "\u2022 So\u011Fuk \xE7al\u0131\u015Ft\u0131r, dur-kalk ve yoku\u015F testi yap." }),
+      (0, y3.jsx)("p", { children: "\u2022 Tramer\u2019i sat\u0131c\u0131yla birlikte sorgula." }),
+      (0, y3.jsx)("p", { children: "\u2022 Noter bitmeden kapora / havale verme." })
     ] }),
-    (0, y3.jsxs)("details", { className: "rounded-xl border border-border bg-surface overflow-hidden group print:open", open: true, children: [
-      (0, y3.jsxs)("summary", { className: "cursor-pointer list-none px-5 py-4 text-sm font-medium flex items-center justify-between gap-3 print:cursor-default", children: [
-        (0, y3.jsx)("span", { children: "Mutlaka yap" }),
-        (0, y3.jsx)("span", { className: "text-muted text-xs shrink-0 transition group-open:rotate-180 print:hidden", children: "\u25BE" })
-      ] }),
-      (0, y3.jsx)("div", { className: "px-5 pb-4 text-sm leading-relaxed text-muted space-y-2 border-t border-border pt-3", children: [
-        (0, y3.jsx)("p", { children: "\u2022 Ba\u011F\u0131ms\u0131z ekspertize g\xF6t\xFCr (boya \xF6l\xE7er, \u015Fasi, OBD, lift)." }),
-        (0, y3.jsx)("p", { children: "\u2022 So\u011Fuk \xE7al\u0131\u015Ft\u0131r, dur-kalk ve yoku\u015F testi yap." }),
-        (0, y3.jsx)("p", { children: "\u2022 Tramer\u2019i sat\u0131c\u0131yla birlikte sorgula." }),
-        (0, y3.jsx)("p", { children: "\u2022 Noter bitmeden kapora / havale verme." })
-      ] })
-    ] }),
-    (0, y3.jsx)("p", { className: "text-xs text-subtle text-center print:mt-6", children: "Bu \xF6n bilgidir. Ekspertizin yerini tutmaz. · alirmiyim.com" }),
+    (0, y3.jsx)("p", { className: "text-xs text-subtle text-center", children: "Bu \xF6n bilgidir. Ekspertizin yerini tutmaz." }),
     (0, y3.jsxs)("div", { className: "grid grid-cols-2 gap-3 print:hidden", children: [
-      (0, y3.jsx)("button", { type: "button", onClick: downloadPdf, className: "rounded-xl border border-border bg-surface px-4 py-3 text-sm font-medium hover:bg-black/5", children: "PDF \u0130ndir" }),
-      (0, y3.jsx)("button", { type: "button", onClick: shareWhatsApp, className: "rounded-xl border border-border bg-surface px-4 py-3 text-sm font-medium hover:bg-black/5", children: "WhatsApp" })
+      (0, y3.jsx)("button", { type: "button", onClick: downloadPdf, className: "rounded-xl border border-border bg-surface px-4 py-3 text-sm font-medium", children: "PDF \u0130ndir" }),
+      (0, y3.jsx)("button", { type: "button", onClick: shareWhatsApp, className: "rounded-xl border border-border bg-surface px-4 py-3 text-sm font-medium", children: "WhatsApp" })
     ] }),
     (0, y3.jsx)("button", { type: "button", onClick: t2, className: "w-full rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-accent-fg print:hidden", children: "Yeni analiz" })
   ] });
