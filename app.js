@@ -316,6 +316,24 @@ function searchBrandByBudget(brandKey, budget) {
   return results.slice(0, 24);
 }
 
+// Bir modelin seçilebilir motor/varyant listesini döner: yakıt cinsi, beygir
+// ve şanzıman bilgisiyle. Şanzıman verisi sadece isimde DSG/CVT/Tiptronic vb.
+// açıkça geçen motorlarda kesindir ("otomatik"); geçmeyenler "manuel/bilinmiyor"
+// olarak gruplanır (kaynak veri bu ayrımı böyle kodluyor).
+function variantsForModel(brandKey, modelKey) {
+  const model = DB_Z3[brandKey]?.models[modelKey];
+  if (!model || !model.variants) return [];
+  return Object.entries(model.variants).map(([key, v]) => {
+    const trans = v.trans === 'otomatik' ? 'otomatik' : 'manuel';
+    return {
+      key, variant: v, trans,
+      fuel: v.fuel,
+      hp: v.hp || 0,
+      label: v.name + (trans === 'otomatik' && !/otomatik|dsg|cvt|tiptronic|multitronic/i.test(v.name) ? ' · Otomatik' : ''),
+    };
+  }).sort((a, b) => (a.variant.years?.[0]?.range[0] || 0) - (b.variant.years?.[0]?.range[0] || 0));
+}
+
 function buildResultCard(brandKey, modelKey, pick) {
   const brand = DB_Z3[brandKey];
   const model = brand.models[modelKey];

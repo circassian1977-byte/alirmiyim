@@ -117,8 +117,8 @@
   </footer>
 </div>
 
-<script src="data.js?v=3"></script>
-<script src="app.js?v=3"></script>
+<script src="data.js?v=4"></script>
+<script src="app.js?v=4"></script>
 <script>
 // ---------- Sekmeler ----------
 document.querySelectorAll('.tab').forEach(btn => {
@@ -168,8 +168,24 @@ function renderBudgetTab(){
           </select>
         </div>
       </div>
+      <div class="row two">
+        <div>
+          <label>Motor (opsiyonel)</label>
+          <select id="inVariant" class="field" disabled>
+            <option value="">Önce model</option>
+          </select>
+        </div>
+        <div>
+          <label>Şanzıman</label>
+          <select id="inTrans" class="field" disabled>
+            <option value="all">Farketmez</option>
+            <option value="manuel">Manuel</option>
+            <option value="otomatik">Otomatik</option>
+          </select>
+        </div>
+      </div>
       <button class="btn" id="btnSearch">Göster</button>
-      <p class="hint">Sadece bütçe + marka girerek de arayabilirsin; model seçmen şart değil.</p>
+      <p class="hint">Sadece bütçe + marka girerek de arayabilirsin; model ve motor seçmen şart değil — seçmezsen bütçene en uygun/en sorunsuz olanı otomatik buluruz.</p>
     </div>
     <div id="budgetResult"></div>
   `;
@@ -177,6 +193,8 @@ function renderBudgetTab(){
   const inBudget = document.getElementById('inBudget');
   const inBrand = document.getElementById('inBrand');
   const inModel = document.getElementById('inModel');
+  const inVariant = document.getElementById('inVariant');
+  const inTrans = document.getElementById('inTrans');
   const btn = document.getElementById('btnSearch');
 
   inBudget.addEventListener('input', () => {
@@ -184,31 +202,67 @@ function renderBudgetTab(){
     inBudget.value = digits ? Number(digits).toLocaleString('tr-TR') : '';
   });
 
+  const resetVariant = (msg) => {
+    inVariant.disabled = true;
+    inVariant.innerHTML = `<option value="">${msg}</option>`;
+    inTrans.disabled = true;
+    inTrans.value = 'all';
+  };
+
+  const populateVariants = () => {
+    if (!inModel.value) { resetVariant('Önce model'); return; }
+    const list = variantsForModel(inBrand.value, inModel.value);
+    if (!list.length) { resetVariant('Bu model için motor detayı yok'); return; }
+    const transFilter = inTrans.disabled ? 'all' : inTrans.value;
+    const filtered = transFilter === 'all' ? list : list.filter(v => v.trans === transFilter);
+    inTrans.disabled = false;
+    inVariant.disabled = false;
+    inVariant.innerHTML = '<option value="">En uygun/en sorunsuz motoru otomatik bul</option>' +
+      filtered.map(v => `<option value="${v.key}">${esc(v.label)}</option>`).join('');
+    if (!filtered.length) inVariant.innerHTML = '<option value="">Bu şanzımanla eşleşen motor yok</option>';
+  };
+
   inBrand.addEventListener('change', () => {
     const brand = DB_Z3[inBrand.value];
     if (!brand) {
       inModel.disabled = true;
       inModel.innerHTML = '<option value="">Önce marka</option>';
+      resetVariant('Önce model');
       return;
     }
     inModel.disabled = false;
     const modelKeys = Object.keys(brand.models).sort((a,b) => brand.models[a].name.localeCompare(brand.models[b].name, 'tr'));
     inModel.innerHTML = '<option value="">Model seç (opsiyonel)</option>' +
       modelKeys.map(k => `<option value="${k}">${esc(brand.models[k].name)}</option>`).join('');
+    resetVariant('Önce model');
   });
+
+  inModel.addEventListener('change', populateVariants);
+  inTrans.addEventListener('change', populateVariants);
 
   btn.addEventListener('click', () => {
     const budget = Number(inBudget.value.replace(/\D/g, '')) || 0;
     const brandKey = inBrand.value;
     const modelKey = inModel.value;
-    runBudgetSearch(budget, brandKey, modelKey);
+    const variantKey = inVariant.value;
+    runBudgetSearch(budget, brandKey, modelKey, variantKey);
   });
 }
 
-function runBudgetSearch(budget, brandKey, modelKey){
+function runBudgetSearch(budget, brandKey, modelKey, variantKey){
   const out = document.getElementById('budgetResult');
   if (!brandKey) { out.innerHTML = '<p class="empty">Lütfen bir marka seç.</p>'; return; }
   if (!Number.isFinite(budget) || budget < 80000) { out.innerHTML = '<p class="empty">Lütfen geçerli bir bütçe gir (en az 80.000 TL).</p>'; return; }
+
+  if (modelKey && variantKey) {
+    const hit = bestYearForBudget(brandKey, modelKey, variantKey, budget);
+    if (!hit) { out.innerHTML = '<p class="empty">Bu motor için veri bulunamadı.</p>'; return; }
+    const variant = DB_Z3[brandKey].models[modelKey].variants[variantKey];
+    const card = buildResultCard(brandKey, modelKey, { ...hit, variantName: variant.name });
+    out.innerHTML = renderResultCard(card);
+    bindCardEvents(out, card);
+    return;
+  }
 
   if (modelKey) {
     const best = findBestGeneration(brandKey, modelKey, budget);
