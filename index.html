@@ -66,7 +66,8 @@
   .ek-item:last-child{border-bottom:none}
   .ek-item .item{font-size:14px;font-weight:600}
   .ek-item .why{font-size:13px;color:var(--muted);margin-top:2px}
-  .link-btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--accent);text-decoration:none;margin-top:4px}
+  .link-btn{display:flex;align-items:center;justify-content:center;gap:8px;font-size:15px;font-weight:800;color:var(--accent-fg);text-decoration:none;margin-top:14px;background:var(--accent);border-radius:12px;padding:14px 16px;min-height:48px}
+  .link-btn:active{opacity:.85}
   .brand-list{display:flex;flex-direction:column;gap:8px}
   .brand-list li{list-style:none}
   .brand-list button{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;color:var(--fg);text-align:left;cursor:pointer}
@@ -76,9 +77,9 @@
   .brand-list .bl-risk{font-size:11px;color:var(--subtle);text-align:right}
   .wl-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
   .wl-item:last-child{border-bottom:none}
-  .wl-dot{margin-top:5px;width:9px;height:9px;border-radius:50%;flex:none}
-  .wl-dot.kritik{background:var(--bad)}
-  .wl-dot.dikkat{background:var(--warn)}
+  .wl-icon{flex:none;width:34px;height:34px;border-radius:9px;background:var(--surface2);border:1px solid var(--border);padding:5px;color:var(--fg)}
+  .wl-icon.kritik{color:var(--bad);border-color:rgba(226,84,62,.4)}
+  .wl-icon.dikkat{color:var(--warn);border-color:rgba(232,185,62,.4)}
   .wl-name{font-size:14px;font-weight:700}
   .wl-level{font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;margin-left:8px;vertical-align:middle}
   .wl-level.kritik{background:rgba(226,84,62,.15);color:var(--bad)}
@@ -268,7 +269,7 @@ function renderResultCard(card){
     <div class="hint">Risk skoru: ${card.risk}/100 — kesin sonuç için ekspertiz şart.</div>
 
     <a class="link-btn no-print" href="${card.sahibinden}" target="_blank" rel="noopener">
-      sahibinden.com'da bu modelin güncel ilanlarını gör &rarr;
+      🔎 sahibinden.com'da güncel ilanları gör
     </a>
 
     <p class="section-title">Kronik sorunlar</p>
@@ -307,20 +308,49 @@ function renderLightTab(){
   el.innerHTML = `
     <div class="card">
       <p class="section-title" style="margin-top:0">Arıza ışığını tanı</p>
-      <p class="hint" style="margin-top:0">Gösterge panelindeki ışığın adını ara; bu semboller neredeyse tüm araçlarda ortaktır.</p>
-      <input id="wlSearch" class="field search-box" placeholder="örn. fren, akü, ABS...">
+      <p class="hint" style="margin-top:0">Aracını seç (yıl opsiyonel) — panelindeki ışıklar ikon olarak listelensin. Aracını seçmesen de tüm ışıkları görebilirsin.</p>
+      <div class="row two">
+        <div>
+          <label>Marka</label>
+          <select id="wlBrand" class="field">
+            <option value="">Marka seç</option>
+            ${brandKeys.map(k => `<option value="${k}">${esc(DB_Z3[k].name)}</option>`).join('')}
+          </select>
+        </div>
+        <div>
+          <label>Model</label>
+          <select id="wlModel" class="field" disabled><option value="">Önce marka</option></select>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Yıl (opsiyonel)</label>
+          <input id="wlYear" class="field" inputmode="numeric" placeholder="örn. 2018">
+        </div>
+      </div>
+      <input id="wlSearch" class="field search-box" placeholder="ışık ara: örn. fren, akü, ABS...">
+      <p class="hint" id="wlNote" style="margin-top:0"></p>
       <div id="wlList"></div>
     </div>
   `;
+  const wlBrand = document.getElementById('wlBrand');
+  const wlModel = document.getElementById('wlModel');
+  const wlYear = document.getElementById('wlYear');
   const search = document.getElementById('wlSearch');
-  const renderList = (q) => {
-    const term = (q || '').trim().toLocaleLowerCase('tr');
-    const items = DB_WL9.filter(w => !term ||
+
+  const renderList = () => {
+    const term = (search.value || '').trim().toLocaleLowerCase('tr');
+    const year = Number(wlYear.value) || null;
+    let items = applicableLights(wlBrand.value, wlModel.value, year);
+    document.getElementById('wlNote').textContent = (wlBrand.value && wlModel.value)
+      ? `${DB_Z3[wlBrand.value].name} ${DB_Z3[wlBrand.value].models[wlModel.value].name} için ${items.length} ışık gösteriliyor.`
+      : 'Bu semboller neredeyse tüm araçlarda ortaktır.';
+    if (term) items = items.filter(w =>
       w.name.tr.toLocaleLowerCase('tr').includes(term) ||
       w.meaning.tr.toLocaleLowerCase('tr').includes(term));
     document.getElementById('wlList').innerHTML = items.length ? items.map(w => `
       <div class="wl-item">
-        <span class="wl-dot ${w.level}"></span>
+        <span class="wl-icon ${w.level}">${svgIcon(w.type)}</span>
         <div>
           <span class="wl-name">${esc(w.name.tr)}</span>
           <span class="wl-level ${w.level}">${w.level === 'kritik' ? 'Kritik — sürüşe devam etmeyin' : 'Dikkat — en kısa zamanda servise götürün'}</span>
@@ -329,8 +359,20 @@ function renderLightTab(){
       </div>
     `).join('') : '<p class="empty">Eşleşen ışık bulunamadı.</p>';
   };
-  search.addEventListener('input', () => renderList(search.value));
-  renderList('');
+
+  wlBrand.addEventListener('change', () => {
+    const brand = DB_Z3[wlBrand.value];
+    if (!brand) { wlModel.disabled = true; wlModel.innerHTML = '<option value="">Önce marka</option>'; renderList(); return; }
+    wlModel.disabled = false;
+    const modelKeys = Object.keys(brand.models).sort((a,b) => brand.models[a].name.localeCompare(brand.models[b].name, 'tr'));
+    wlModel.innerHTML = '<option value="">Model seç</option>' + modelKeys.map(k => `<option value="${k}">${esc(brand.models[k].name)}</option>`).join('');
+    renderList();
+  });
+  wlModel.addEventListener('change', renderList);
+  wlYear.addEventListener('input', () => { wlYear.value = wlYear.value.replace(/\D/g,'').slice(0,4); renderList(); });
+  search.addEventListener('input', renderList);
+
+  renderList();
 }
 
 renderBudgetTab();
