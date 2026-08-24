@@ -165,7 +165,9 @@ function searchBrandByBudget(brandKey, budget) {
     const best = findBestGeneration(brandKey, modelKey, budget);
     if (best) results.push({ brandKey, modelKey, modelName: brand.models[modelKey].name, ...best });
   }
-  results.sort((a, b) => Math.abs(a.est.mid - budget) - Math.abs(b.est.mid - budget));
+  // Hem bütçeye yakınlık hem risk (sorunsuzluk) birlikte sıralanır — en az riskli
+  // ve bütçeye en yakın olanlar en üstte. (score, findBestGeneration içinde hesaplanır.)
+  results.sort((a, b) => a.score - b.score);
   return results.slice(0, 24);
 }
 

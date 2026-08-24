@@ -221,7 +221,7 @@ function runBudgetSearch(budget, brandKey, modelKey){
   const list = searchBrandByBudget(brandKey, budget);
   if (!list.length) { out.innerHTML = '<p class="empty">Bu bütçe aralığında uygun model bulunamadı. Tutarı biraz değiştir.</p>'; return; }
   out.innerHTML = `
-    <p class="section-title">Bu bütçeye yakın ${esc(DB_Z3[brandKey].name)} modelleri</p>
+    <p class="section-title">Bu bütçeye yakın, en sorunsuz ${esc(DB_Z3[brandKey].name)} modelleri</p>
     <ul class="brand-list">
       ${list.map((r,i) => `
         <li><button data-idx="${i}">
